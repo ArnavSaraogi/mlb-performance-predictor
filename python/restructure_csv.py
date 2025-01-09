@@ -1,5 +1,5 @@
 """
-Turns stats_300.csv into out.csv.
+Turns stats_300.csv (downloaded from BaseballSavant) into out.csv.
 Changes the csv from a long format to a wide format, with individual players representing 1 row with all their stats from 2021-2024.
 Adds 3 columns for the OPS % change by year.
 """
