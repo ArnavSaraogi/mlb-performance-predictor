@@ -6,15 +6,27 @@ Adds 3 columns for the OPS % change by year.
 
 import pandas as pd
 
-df = pd.read_csv('stats_300.csv')
-df = df.pivot(index = ['player_id', 'last_name, first_name'], columns = 'year').dropna()
-df.columns = [f"{col[0]} ({col[1]})" for col in df.columns]
+stats_df = pd.read_csv('input_csvs/stats.csv')
+babip_df = pd.read_csv('input_csvs/babip.csv')
+hr_df = pd.concat([pd.read_csv('input_csvs/homeruns_2023.csv'), pd.read_csv('input_csvs/homeruns_2024.csv')])
 
-df['ops_change 2021-2022'] = df[['on_base_plus_slg (2021)', 'on_base_plus_slg (2022)']].pct_change(axis = 1)['on_base_plus_slg (2022)']
-df['ops_change 2021-2022'] *= 100
-df['ops_change 2022-2023'] = df[['on_base_plus_slg (2022)', 'on_base_plus_slg (2023)']].pct_change(axis = 1)['on_base_plus_slg (2023)']
-df['ops_change 2022-2023'] *= 100
-df['ops_change 2023-2024'] = df[['on_base_plus_slg (2023)', 'on_base_plus_slg (2024)']].pct_change(axis = 1)['on_base_plus_slg (2024)']
-df['ops_change 2023-2024'] *= 100
+stats_df = stats_df.pivot(index = ['player_id', 'last_name, first_name'], columns = 'year').dropna()
+stats_df.columns = [f'{col[0]} ({col[1]})' for col in stats_df.columns]
 
-df.to_csv('out.csv')
+babip_df = babip_df.pivot(index = ['player_id', 'last_name, first_name'], columns = 'year')
+babip_df.columns = [f'{col[0]} ({col[1]})' for col in babip_df.columns]
+babip_df = babip_df[babip_df.index.isin(stats_df.index)]
+babip_df['babip_career'] = babip_df.mean(axis=1)
+babip_df['babipdiff (2023)'] = babip_df['babip (2023)'] - babip_df['babip_career']
+babip_df['babipdiff (2024)'] = babip_df['babip (2024)'] - babip_df['babip_career']
+
+hr_df = hr_df.pivot_table(index = 'player', columns = 'year', aggfunc = lambda x: '; '.join(x) if x.dtype == 'object' else x.sum()).dropna()
+babip_df.columns = [f'{col[0]} ({col[1]})' for col in babip_df.columns]
+
+hr_df.to_csv('test.csv')
+
+stats_df[['babipdiff (2023)', 'babipdiff (2024)']] = babip_df[['babipdiff (2023)', 'babipdiff (2024)']]
+stats_df['ops_change 2023-2024'] = stats_df[['on_base_plus_slg (2023)', 'on_base_plus_slg (2024)']].pct_change(axis = 1)['on_base_plus_slg (2024)']
+stats_df['ops_change 2023-2024'] *= 100
+
+stats_df.to_csv('out.csv')
