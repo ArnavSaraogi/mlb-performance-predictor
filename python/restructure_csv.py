@@ -16,17 +16,21 @@ stats_df.columns = [f'{col[0]} ({col[1]})' for col in stats_df.columns]
 babip_df = babip_df.pivot(index = ['player_id', 'last_name, first_name'], columns = 'year')
 babip_df.columns = [f'{col[0]} ({col[1]})' for col in babip_df.columns]
 babip_df = babip_df[babip_df.index.isin(stats_df.index)]
-babip_df['babip_career'] = babip_df.mean(axis=1)
+babip_df['babip_career'] = babip_df.drop('babip (2024)', axis=1).mean(axis=1)
 babip_df['babipdiff (2023)'] = babip_df['babip (2023)'] - babip_df['babip_career']
 babip_df['babipdiff (2024)'] = babip_df['babip (2024)'] - babip_df['babip_career']
 
-#Add HR Stat
-hr_df = hr_df.pivot_table(index = 'player', columns = 'year', aggfunc = lambda x: '; '.join(x) if x.dtype == 'object' else x.sum()).dropna()
-babip_df.columns = [f'{col[0]} ({col[1]})' for col in babip_df.columns]
-
-hr_df.to_csv('test.csv')
+hr_df = (hr_df.pivot_table(index = 'player', 
+                           columns = 'year', 
+                           aggfunc = lambda x: '; '.join(x) if x.dtype == 'object' else x.sum())
+                           .dropna())
+hr_df.columns = [f'{col[0]} ({col[1]})' for col in hr_df.columns]
+hr_df = hr_df[hr_df.index.isin(stats_df.index.get_level_values(1))]
+player_order = stats_df.index.get_level_values('last_name, first_name')
+hr_df = hr_df.reindex(player_order)
 
 stats_df[['babipdiff (2023)', 'babipdiff (2024)']] = babip_df[['babipdiff (2023)', 'babipdiff (2024)']]
+stats_df[['xhrdiff (2023)', 'xhrdiff (2024)']] = hr_df[['xhr_diff (2023)', 'xhr_diff (2024)']].values
 stats_df['ops_change 2023-2024'] = stats_df[['on_base_plus_slg (2023)', 'on_base_plus_slg (2024)']].pct_change(axis = 1)['on_base_plus_slg (2024)']
 stats_df['ops_change 2023-2024'] *= 100
 
