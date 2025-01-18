@@ -16,9 +16,10 @@ stats_df.columns = [f'{col[0]} ({col[1]})' for col in stats_df.columns]
 babip_df = babip_df.pivot(index = ['player_id', 'last_name, first_name'], columns = 'year')
 babip_df.columns = [f'{col[0]} ({col[1]})' for col in babip_df.columns]
 babip_df = babip_df[babip_df.index.isin(stats_df.index)]
-babip_df['babip_career'] = babip_df.drop('babip (2024)', axis=1).mean(axis=1)
-babip_df['babipdiff (2023)'] = babip_df['babip (2023)'] - babip_df['babip_career']
-babip_df['babipdiff (2024)'] = babip_df['babip (2024)'] - babip_df['babip_career']
+babip_df['babip_career_2023'] = babip_df.drop(['babip (2023)', 'babip (2024)'], axis=1).mean(axis=1)
+babip_df['babip_career_2024'] = babip_df.drop(['babip (2024)', 'babip_career_2023'], axis=1).mean(axis=1)
+babip_df['babipdiff (2023)'] = babip_df['babip (2023)'] - babip_df['babip_career_2023']
+babip_df['babipdiff (2024)'] = babip_df['babip (2024)'] - babip_df['babip_career_2024']
 
 hr_df = (hr_df.pivot_table(index = 'player', 
                            columns = 'year', 
