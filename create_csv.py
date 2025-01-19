@@ -1,9 +1,3 @@
-"""
-Turns stats_300.csv (downloaded from BaseballSavant) into out.csv.
-Changes the csv from a long format to a wide format, with individual players representing 1 row with all their stats from 2021-2024.
-Adds 3 columns for the OPS % change by year.
-"""
-
 import pandas as pd
 
 stats_df = pd.read_csv('input_csvs/stats.csv')
@@ -34,5 +28,8 @@ stats_df[['babipdiff (2023)', 'babipdiff (2024)']] = babip_df[['babipdiff (2023)
 stats_df[['xhrdiff (2023)', 'xhrdiff (2024)']] = hr_df[['xhr_diff (2023)', 'xhr_diff (2024)']].values
 stats_df['ops_change 2023-2024'] = stats_df[['on_base_plus_slg (2023)', 'on_base_plus_slg (2024)']].pct_change(axis = 1)['on_base_plus_slg (2024)']
 stats_df['ops_change 2023-2024'] *= 100
+
+# centers data to avoid skewing regression, since league avg change in OPS not only due to luck fluctuations 
+stats_df['ops_change 2023-2024'] -= stats_df['ops_change 2023-2024'].mean()
 
 stats_df.to_csv('out.csv')
